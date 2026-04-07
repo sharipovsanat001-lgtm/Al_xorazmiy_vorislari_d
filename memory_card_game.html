@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Memory Card Game - Extra Life</title>
+<style>
+  body { font-family: Arial, sans-serif; background:#222; color:#fff; display:flex; flex-direction:column; align-items:center; min-height:100vh; margin:0;}
+  h1 {color:#f39c12; margin:10px;}
+  .top-menu { display:flex; gap:10px; margin-bottom:10px;}
+  .top-menu button { padding:10px 15px; background:#555; border:none; border-radius:5px; cursor:pointer; color:#fff;}
+  .top-menu button.active {background:#f39c12; color:#222;}
+  .info {margin-bottom:10px;}
+  .hearts {color:red; font-size:24px; margin-bottom:5px;}
+  .grid {display:grid; grid-template-columns:repeat(4,100px); gap:15px;}
+  .card {width:100px;height:100px;background:#444; display:flex; align-items:center; justify-content:center; font-size:40px; cursor:pointer; border-radius:10px; transition:transform 0.3s; user-select:none;}
+  .card.flipped {background:#f39c12; color:#222; transform:rotateY(180deg);}
+  .card.matched {background:#27ae60; color:#fff; cursor:default;}
+  #message {margin-top:15px; font-size:20px; color:#f39c12;}
+  #score {margin-top:5px;}
+  .cup {width:100px; margin-top:20px;}
+  #restartBtn {margin-top:10px; padding:10px 15px; background:#e74c3c; border:none; border-radius:5px; cursor:pointer; color:#fff;}
+</style>
+</head>
+<body>
+
+<h1>Memory Card Game</h1>
+<div class="top-menu">
+  <button data-category="cars" class="active">Mashinalar</button>
+  <button data-category="fruits">Mevalar</button>
+  <button data-category="animals">Hayvonlar</button>
+</div>
+
+<div class="info">
+  <div class="hearts" id="hearts">❤️❤️❤️</div>
+  <div id="score">Ballar: 0</div>
+</div>
+
+<div class="grid" id="grid"></div>
+<div id="message"></div>
+<img id="cup" class="cup" src="" style="display:none;" alt="Kubok">
+<button id="restartBtn">Qayta boshlash</button>
+
+<script>
+const grid = document.getElementById('grid');
+const message = document.getElementById('message');
+const heartsEl = document.getElementById('hearts');
+const scoreEl = document.getElementById('score');
+const cupEl = document.getElementById('cup');
+const restartBtn = document.getElementById('restartBtn');
+const categoryButtons = document.querySelectorAll('.top-menu button');
+
+let categories = {
+  cars: ['🚗','🚙','🚌','🏎️','🚓','🚕','🚑','🚐'],
+  fruits: ['🍎','🍌','🍒','🍇','🍉','🍓','🥝','🍍'],
+  animals: ['🐶','🐱','🦁','🐮','🐷','🐸','🐵','🐔']
+};
+
+let cards = [];
+let firstCard = null;
+let secondCard = null;
+let lockBoard = false;
+let matches = 0;
+let score = 0;
+let hearts = 3;
+let maxHearts = 5; // maksimal yurak soni
+let nextExtraLifeAt = 20; // har 20 balldan keyin jon
+let currentCategory = 'cars';
+
+function shuffle(array){
+  for(let i=array.length-1;i>0;i--){
+    let j = Math.floor(Math.random()*(i+1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
+function createBoard() {
+  grid.innerHTML = '';
+  matches = 0;
+  firstCard = null;
+  secondCard = null;
+  lockBoard = false;
+
+  let selectedCards = [...categories[currentCategory], ...categories[currentCategory]];
+  shuffle(selectedCards);
+  selectedCards.forEach(item=>{
+    const card = document.createElement('div');
+    card.classList.add('card');
+    card.dataset.value = item;
+    card.addEventListener('click', flipCard);
+    grid.appendChild(card);
+  });
+
+  // yangilangan UI
+  heartsEl.textContent = '❤️'.repeat(hearts);
+  scoreEl.textContent = "Ballar: "+score;
+  message.textContent = '';
+  cupEl.style.display='none';
+}
+
+function flipCard(){
+  if(lockBoard) return;
+  if(this===firstCard) return;
+  this.classList.add('flipped');
+  this.textContent = this.dataset.value;
+
+  if(!firstCard){
+    firstCard=this;
+    return;
+  }
+  secondCard=this;
+  checkMatch();
+}
+
+function checkMatch(){
+  if(firstCard.dataset.value===secondCard.dataset.value){
+    firstCard.classList.add('matched');
+    secondCard.classList.add('matched');
+    resetTurn();
+    matches +=1;
+    score +=10;
+    scoreEl.textContent="Ballar: "+score;
+
+    // tekshirish: har 20 balldan keyin +1 yurak
+    if(score >= nextExtraLifeAt && hearts < maxHearts){
+      hearts +=1;
+      nextExtraLifeAt +=20; // keyingi bonus
+      heartsEl.textContent='❤️'.repeat(hearts);
+      alert("Tabriklaymiz! +1 jon qo‘shildi! ❤️");
+    }
+
+    if(matches===categories[currentCategory].length){
+      message.textContent="Tabriklaymiz! Siz yutdingiz 🎉";
+      cupEl.src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/37/FIFA_World_Cup_%28trophy%29.svg/1200px-FIFA_World_Cup_%28trophy%29.svg.png";
+      cupEl.style.display='block';
+    }
+  } else {
+    lockBoard=true;
+    hearts -=1;
+    heartsEl.textContent='❤️'.repeat(hearts);
+    setTimeout(()=>{
+      firstCard.classList.remove('flipped');
+      secondCard.classList.remove('flipped');
+      firstCard.textContent='';
+      secondCard.textContent='';
+      resetTurn();
+      if(hearts===0){
+        message.textContent="Afsus! Siz yutqazdingiz ❌";
+      }
+    },1000);
+  }
+}
+
+function resetTurn(){
+  [firstCard, secondCard] = [null,null];
+  lockBoard=false;
+}
+
+categoryButtons.forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    categoryButtons.forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    currentCategory = btn.dataset.category;
+    createBoard();
+  });
+});
+
+restartBtn.addEventListener('click', ()=>{
+  createBoard();
+});
+
+createBoard();
+</script>
+
+</body>
+</html>
