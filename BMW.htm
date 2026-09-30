@@ -4,7 +4,7 @@
             if (event.originalPolicy.includes('report-uri') || cspReportsCount >= 500) {  
               return;
             } 
-            cspReportsCount += 1;
+            cspReportsCount += 1 
             await fetch('/_/_/csp_report/', {  
               method: 'POST',
               body: JSON.stringify({
