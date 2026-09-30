@@ -8,7 +8,7 @@
             await fetch('/_/_/csp_report/', {  
               method: 'POST',
               body: JSON.stringify({ 
-                'csp-report': {
+                'csp-report': { 
                   'blocked-uri': event.blockedURI, 
                   disposition: event.disposition,
                   'document-uri': event.documentURI,
