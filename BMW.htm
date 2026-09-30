@@ -9,8 +9,7 @@
               method: 'POST',
               body: JSON.stringify({
                 'csp-report': {
-                  'blocked-uri': event.blockedURI,
-                  'column-number': event.columnNumber,
+                  'blocked-uri': event.blockedURI, 
                   disposition: event.disposition,
                   'document-uri': event.documentURI,
                   'effective-directive': event.effectiveDirective,
